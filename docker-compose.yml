@@ -1,0 +1,33 @@
+version: "3"
+services:
+  db:
+    image: postgres
+    volumes:
+      - ./data/db:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=circlepen
+    ports:
+      - "5432:5432"
+  app:
+    restart: always
+    build: ./backend
+    # command: bash -c "cd schedule && python3 manage.py crontab add && python3 manage.py makemigrations && python3 manage.py migrate &&  python3 manage.py runserver 0.0.0.0:80"
+    command:
+      - /bin/sh
+      - -c
+      - |
+        python3 manage.py collectstatic --noinput
+        python3 manage.py makemigrations
+        python3 manage.py migrate
+        python3 manage.py runserver 0.0.0.0:8000
+    container_name: web
+    volumes:
+      - .:/code
+      - ./backend:/code/backend
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+  
